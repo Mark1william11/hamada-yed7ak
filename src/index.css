@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* Custom Fonts - Playful & Cozy */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+/* CSS Variables - COZY HYPER-CASUAL THEME */
+:root {
+  /* Primary Palette - Soft & Playful */
+  --primary-purple: #A78BFA;
+  /* Soft lavender */
+  --primary-purple-dark: #8B5CF6;
+  /* Rich purple */
+  --primary-blue: #60A5FA;
+  /* Sky blue */
+  --primary-orange: #FB923C;
+  /* Warm orange */
+  --primary-pink: #F472B6;
+  /* Bubblegum pink */
+
+  /* Backgrounds - Light & Airy */
+  --bg-main: #F0F4FF;
+  /* Very light blue */
+  --bg-light: #FFFFFF;
+  /* Pure white */
+  --bg-purple-soft: #EDE9FE;
+  /* Soft purple tint */
+
+  /* Accents */
+  --success-green: #4ADE80;
+  /* Bright green */
+  --error-red: #F87171;
+  /* Soft red */
+  --warning-yellow: #FBBF24;
+  /* Sunny yellow */
+
+  /* Shadows - Soft & Friendly */
+  --shadow-soft: 0 4px 12px rgba(139, 92, 246, 0.15);
+  --shadow-medium: 0 8px 24px rgba(139, 92, 246, 0.2);
+  --shadow-strong: 0 12px 36px rgba(139, 92, 246, 0.25);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', 'Fredoka', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #E0E7FF 0%, #FDE68A 50%, #FBCFE8 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+}
+
+/* Custom Scrollbar - Playful */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-purple-soft);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-purple);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-purple-dark);
+}
+
+/* Shake Animation - Playful */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px) rotate(-2deg);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px) rotate(2deg);
+  }
+}
+
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 0.6s ease-in-out infinite;
+}
+
+/* Pulse Glow - Soft */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.7);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Gradient Text - Cozy */
+.gradient-text {
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass Morphism - Light & Soft */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Prevent layout shift */
+.image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+/* Button focus states - Playful */
+button:focus-visible {
+  outline: 3px solid var(--primary-purple);
+  outline-offset: 3px;
+  border-radius: 20px;
+}
+
+/* Floating Animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Wiggle Animation */
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-5deg);
+  }
+
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
