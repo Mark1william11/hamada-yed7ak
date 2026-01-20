@@ -10,14 +10,14 @@ import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast, set,
 // Firebase configuration - Free tier project for Hamada Yed7ak
 // Note: For production, create your own Firebase project at https://console.firebase.google.com
 const firebaseConfig = {
-    apiKey: "AIzaSyAEfGz2uLuJzlBWZ2dcGwLJaIzCy6yhbxI",
-    authDomain: "hamada-co.firebaseapp.com",
-    databaseURL: "https://hamada-co-default-rtdb.firebaseio.com",
-    projectId: "hamada-co",
-    storageBucket: "hamada-co.firebasestorage.app",
-    messagingSenderId: "422768411809",
-    appId: "1:422768411809:web:57ef8c96a97d9462f6dce0",
-    measurementId: "G-JV608NZRLL"
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+    appId: "1:422768411809:web:ca9a4f07b962a11cf6dce0",
+    measurementId: "G-NQPMRYH6ES"
 };
 
 // Initialize Firebase
