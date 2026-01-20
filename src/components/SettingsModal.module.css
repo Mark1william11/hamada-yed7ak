@@ -20,6 +20,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -44,6 +45,7 @@
     opacity: 0;
     transform: translateY(40px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -171,6 +173,39 @@
   font-variant-numeric: tabular-nums;
 }
 
+.settingDescription {
+  font-size: 12px;
+  color: #6B7280;
+  margin: -4px 0 4px 0;
+  line-height: 1.4;
+}
+
+.testButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #EDE9FE 0%, #E9D5FF 100%);
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7C3AED;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.testButton:hover {
+  background: linear-gradient(135deg, #DDD6FE 0%, #D8B4FE 100%);
+  transform: translateY(-1px);
+}
+
+.testButton:active {
+  transform: translateY(0);
+}
+
 /* Slider */
 .sliderContainer {
   display: flex;
@@ -181,6 +216,14 @@
 .sliderIcon {
   font-size: 18px;
   flex-shrink: 0;
+}
+
+.sliderIconSvg {
+  width: 16px;
+  height: 16px;
+  color: #8b5cf6;
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 .slider {
@@ -349,6 +392,171 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Player Name Styles */
+.nameInputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nameInput {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #E9D5FF;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  background: white;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.nameInput:focus {
+  border-color: #A78BFA;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+}
+
+.nameInput::placeholder {
+  color: #9CA3AF;
+}
+
+.nameButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.saveButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  background: #E5E7EB;
+  color: #6B7280;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #D1D5DB;
+}
+
+.nameDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F0FF 100%);
+  border-radius: 12px;
+  border: 2px solid #E9D5FF;
+}
+
+.playerNameText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #7C3AED;
+}
+
+.editButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #EDE9FE 0%, #E9D5FF 100%);
+  color: #7C3AED;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton:hover {
+  background: linear-gradient(135deg, #DDD6FE 0%, #D8B4FE 100%);
+  transform: translateY(-1px);
+}
+
+.homeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.homeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1F2937;
+}
+
+.successMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border-radius: 16px;
+  color: #065F46;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.confirmButton {
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%) !important;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+
 .confirmModal {
   background: white;
   border-radius: 28px;
@@ -370,6 +578,7 @@
   0% {
     transform: scale(0) rotate(-180deg);
   }
+
   100% {
     transform: scale(1) rotate(0);
   }

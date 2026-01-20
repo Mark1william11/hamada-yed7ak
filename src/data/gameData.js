@@ -84,24 +84,6 @@ export const gameLevels = [
         ],
         correctMouth: "m4"
     },
-    // {
-    //     id: 5,
-    //     celebrity: "Chris Hemsworth",
-    //     baseImage: "https://picsum.photos/seed/base5/400/400",
-    //     completeImage: "https://picsum.photos/seed/complete5/400/400",
-    //     overlayStyle: {
-    //         top: "59%",
-    //         left: "24%",
-    //         width: "52%"
-    //     },
-    //     options: [
-    //         { id: "m1", image: "https://picsum.photos/seed/mouth5a/200/100" },
-    //         { id: "m2", image: "https://picsum.photos/seed/mouth5b/200/100" },
-    //         { id: "m3", image: "https://picsum.photos/seed/mouth5c/200/100" },
-    //         { id: "m4", image: "https://picsum.photos/seed/mouth5d/200/100" },
-    //     ],
-    //     correctMouth: "m2"
-    // }
 ];
 
 // Game configuration

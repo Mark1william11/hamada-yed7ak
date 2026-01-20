@@ -7,11 +7,12 @@ import { WinModal } from './components/WinModal';
 import { MainMenu } from './components/MainMenu';
 import { LevelSelect } from './components/LevelSelect';
 import { SettingsModal } from './components/SettingsModal';
-import { useGameLogic } from './hooks/useGameLogic';
-import { useGameSettings } from './hooks/useGameSettings';
-import { useGameProgress } from './hooks/useGameProgress';
+import { LoadingTransition } from './components/LoadingTransition';
+import { Leaderboard } from './components/Leaderboard';
+import { useGameState } from './hooks/useGameState';
+import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { gameLevels } from './data/gameData';
-import { RefreshCw, Home, Loader, Volume2, VolumeX, Settings } from 'lucide-react';
+import { RefreshCw, Home, Loader, Volume2, VolumeX, Settings, Trophy } from 'lucide-react';
 
 // Game states
 const GAME_STATE = {
@@ -21,52 +22,64 @@ const GAME_STATE = {
 };
 
 /**
- * Main App Component - PREMIUM MOBILE GAME VERSION
- * Features:
- * - Dynamic animated background with floating particles
- * - Smooth state transitions with AnimatePresence
- * - Enhanced commercial break UI with countdown
- * - Sound toggle with persistent mute state
- * - Premium game juice and visual polish
+ * Main App Component - REFACTORED PRODUCTION VERSION
+ * 
+ * Architecture:
+ * - CSS Grid layout for zero scroll/overflow
+ * - Unified useGameState hook (single source of truth)
+ * - Asset preloading between levels
+ * - Programmatic audio via AudioManager
  */
 function App() {
+  // Navigation state
   const [gameState, setGameState] = useState(GAME_STATE.MENU);
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
   const [showAd, setShowAd] = useState(false);
   const [adCountdown, setAdCountdown] = useState(3);
   const [showSettings, setShowSettings] = useState(false);
-  
-  const { isSoundMuted, toggleSound } = useGameSettings();
-  const {
-    progress,
-    completeLevel,
-    isLevelUnlocked,
-    isLevelCompleted,
-  } = useGameProgress(gameLevels.length);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
+  // Unified game state
   const {
     currentLevel,
     score,
     lives,
+    attempts,
     isLevelComplete,
     selectedMouth,
     isShaking,
     gameOver,
     handleMouthSelect,
-    handleResetGame,
+    handleResetLevel,
     handleResetProgress,
-    handleHardReset,
-    isMuted,
-    toggleMute,
     settings,
     updateSetting,
     updateSettings,
-    gameState: hookGameState, // New: Rename to avoid conflict
-    goHome, // New: Add goHome function
-  } = useGameLogic(selectedLevelIndex);
+    isMuted,
+    toggleMute,
+    isLevelUnlocked,
+    isLevelCompleted,
+    completeLevel,
+    submitToLeaderboard,
+    progress,
+    initAudio,
+    playerName,
+    setPlayerName,
+    totalScore,
+    getPointsForAttempt,
+  } = useGameState(selectedLevelIndex);
+
+  // Asset preloader
+  const { isReady: assetsReady, progress: loadProgress } = useAssetPreloader(
+    gameLevels[selectedLevelIndex],
+    selectedLevelIndex
+  );
 
   // State for hover preview
   const [previewMouth, setPreviewMouth] = useState(null);
+
+  // Show loading between level transitions
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   /**
    * Ad countdown timer effect
@@ -97,25 +110,32 @@ function App() {
 
   // Start game from menu
   const handleStartGame = () => {
+    initAudio(); // Initialize audio on first interaction
     setGameState(GAME_STATE.LEVEL_SELECT);
   };
 
   // Select a level from the level select screen
   const handleSelectLevel = (levelNumber) => {
+    setIsTransitioning(true);
     setSelectedLevelIndex(levelNumber - 1);
-    handleResetGame();
-    setGameState(GAME_STATE.PLAYING);
+    handleResetLevel();
+    
+    // Small delay to show loading
+    setTimeout(() => {
+      setGameState(GAME_STATE.PLAYING);
+      setIsTransitioning(false);
+    }, 300);
   };
 
   // Return to menu
   const handleBackToMenu = () => {
-    handleResetGame();
+    handleResetLevel();
     setGameState(GAME_STATE.MENU);
   };
 
   // Return to level select
   const handleBackToLevelSelect = () => {
-    handleResetGame();
+    handleResetLevel();
     setGameState(GAME_STATE.LEVEL_SELECT);
   };
 
@@ -133,8 +153,13 @@ function App() {
       
       // Auto-advance to next level if available
       if (levelNumber < gameLevels.length && isLevelUnlocked(levelNumber + 1)) {
+        setIsTransitioning(true);
         setSelectedLevelIndex(levelNumber);
-        handleResetGame();
+        handleResetLevel();
+        
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 500);
       } else {
         // No more levels, back to level select
         handleBackToLevelSelect();
@@ -142,8 +167,44 @@ function App() {
     }, 3000);
   };
 
+  // Check if we should show loading (transitioning and assets not ready)
+  const showLoading = isTransitioning || (gameState === GAME_STATE.PLAYING && !assetsReady);
+
+  // Build accessibility class names
+  const accessibilityClasses = [
+    settings.accessibility.reduceMotion ? 'reduce-motion' : '',
+    settings.accessibility.highContrast ? 'high-contrast' : '',
+    settings.accessibility.screenReaderMode ? 'screen-reader-mode' : '',
+  ].filter(Boolean).join(' ');
+
+  // Screen reader announcements
+  const [announcement, setAnnouncement] = useState('');
+  
+  // Announce game events for screen readers
+  useEffect(() => {
+    if (!settings.accessibility.screenReaderMode) return;
+    
+    if (isLevelComplete) {
+      setAnnouncement(`Correct! Level ${selectedLevelIndex + 1} complete. Score: ${score}`);
+    } else if (gameOver) {
+      setAnnouncement(`Game over. No lives remaining. Final score: ${score}`);
+    }
+  }, [isLevelComplete, gameOver, settings.accessibility.screenReaderMode, selectedLevelIndex, score]);
+
   return (
-    <div className="min-h-[100dvh] w-full flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
+    <div className={`h-[100dvh] w-full flex items-center justify-center p-2 sm:p-4 relative overflow-hidden ${accessibilityClasses}`}>
+      {/* Screen Reader Live Region */}
+      {settings.accessibility.screenReaderMode && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {announcement}
+        </div>
+      )}
+
       {/* Dynamic Animated Background */}
       <div className="fixed inset-0 -z-20 bg-gradient-to-br from-purple-100 via-blue-50 to-pink-100">
         {/* Floating particle background */}
@@ -212,30 +273,32 @@ function App() {
         />
       </div>
 
-      {/* Phone Container - PREMIUM THEME */}
+      {/* Phone Container - CSS GRID LAYOUT for Zero Overflow */}
       <motion.div
-        className="relative w-full max-w-md h-[100dvh] sm:h-[90vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden sm:border-4 border-purple-300 flex flex-col"
+        className="relative w-full max-w-md h-[100dvh] sm:h-[90vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden sm:border-4 border-purple-300 grid grid-rows-[auto_1fr_auto]"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        {/* Sound Toggle - Top Right Corner */}
-        <motion.button
-          onClick={toggleMute}
-          className="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-sm hover:bg-white p-2 sm:p-3 rounded-full shadow-lg border-2 border-purple-200"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          title={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted ? (
-            <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-          ) : (
-            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-          )}
-        </motion.button>
+        {/* Sound Toggle - Top Right Corner (only in non-playing states) */}
+        {gameState !== GAME_STATE.PLAYING && !isTransitioning && (
+          <motion.button
+            onClick={toggleMute}
+            className="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-sm hover:bg-white p-2 sm:p-3 rounded-full shadow-lg border-2 border-purple-200"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? (
+              <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            ) : (
+              <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            )}
+          </motion.button>
+        )}
 
         {/* Settings Button - Top Left Corner (visible in menu/level select) */}
-        {gameState !== GAME_STATE.PLAYING && (
+        {gameState !== GAME_STATE.PLAYING && !isTransitioning && (
           <motion.button
             onClick={() => setShowSettings(true)}
             className="absolute top-4 left-4 z-40 bg-white/80 backdrop-blur-sm hover:bg-white p-2 sm:p-3 rounded-full shadow-lg border-2 border-purple-200"
@@ -244,6 +307,20 @@ function App() {
             title="Settings"
           >
             <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+          </motion.button>
+        )}
+
+        {/* Leaderboard Button - Top Middle (visible in menu/level select) */}
+        {gameState !== GAME_STATE.PLAYING && !isTransitioning && (
+          <motion.button
+            onClick={() => setShowLeaderboard(true)}
+            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-lg border-2 border-white flex items-center gap-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Leaderboard"
+          >
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-800" />
+            <span className="font-bold text-sm sm:text-base text-yellow-900">{totalScore}</span>
           </motion.button>
         )}
 
@@ -257,7 +334,7 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full"
+              className="w-full h-full col-span-full row-span-full"
             >
               <MainMenu
                 onStartGame={handleStartGame}
@@ -276,7 +353,7 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full"
+              className="w-full h-full col-span-full row-span-full"
             >
               <LevelSelect
                 levels={gameLevels}
@@ -288,7 +365,7 @@ function App() {
             </motion.div>
           )}
 
-          {/* PLAYING STATE */}
+          {/* PLAYING STATE - Uses Grid Layout */}
           {gameState === GAME_STATE.PLAYING && (
             <motion.div
               key="playing"
@@ -296,8 +373,18 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col"
+              className="w-full h-full grid grid-rows-[auto_1fr_auto] overflow-hidden"
             >
+              {/* LOADING OVERLAY */}
+              <AnimatePresence>
+                {showLoading && (
+                  <LoadingTransition 
+                    progress={loadProgress} 
+                    message="Loading level..." 
+                  />
+                )}
+              </AnimatePresence>
+
               {/* GAME OVER OVERLAY */}
               <AnimatePresence>
                 {gameOver && (
@@ -334,9 +421,7 @@ function App() {
 
                       <div className="space-y-3">
                         <motion.button
-                          onClick={() => {
-                            handleResetGame();
-                          }}
+                          onClick={handleResetLevel}
                           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold text-lg py-4 px-8 rounded-3xl shadow-xl flex items-center justify-center gap-3 border-4 border-white"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -360,21 +445,21 @@ function App() {
                 )}
               </AnimatePresence>
 
-              {/* PLAYING CONTENT */}
-              <div className="flex-none">
-                <GameHeader
-                  score={score}
-                  lives={lives}
-                  currentLevel={selectedLevelIndex + 1}
-                  totalLevels={gameLevels.length}
-                  gameState={gameState}
-                  goHome={() => handleBackToMenu()} // New: Pass goHome callback
-                  isMuted={isMuted} // New: Pass isMuted state
-                  toggleMute={toggleMute} // New: Pass toggleMute function
-                />
-              </div>
+              {/* HEADER - Row 1 (auto height) */}
+              <GameHeader
+                score={totalScore + score}
+                lives={lives}
+                currentLevel={selectedLevelIndex + 1}
+                totalLevels={gameLevels.length}
+                gameState={gameState}
+                goHome={handleBackToMenu}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenLeaderboard={() => setShowLeaderboard(true)}
+              />
 
-              <div className="flex-1 min-h-0 flex flex-col bg-gradient-to-br from-purple-50 to-pink-50">
+              {/* STAGE - Row 2 (flex to fill remaining space) */}
+              <div className="min-h-0 overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50">
                 <GameStage
                   level={currentLevel}
                   isLevelComplete={isLevelComplete}
@@ -384,7 +469,8 @@ function App() {
                 />
               </div>
 
-              <div className="flex-none">
+              {/* OPTIONS - Row 3 (auto height, constrained) */}
+              <div className="flex-shrink-0">
                 <OptionGrid
                   options={currentLevel.options}
                   selectedMouth={selectedMouth}
@@ -402,7 +488,7 @@ function App() {
                 currentLevel={selectedLevelIndex + 1}
                 totalLevels={gameLevels.length}
                 onNextLevel={handleLevelWon}
-                onReplay={() => handleResetGame()}
+                onReplay={handleResetLevel}
                 isGameWon={false}
               />
             </motion.div>
@@ -507,9 +593,18 @@ function App() {
         settings={settings}
         updateSetting={updateSetting}
         updateSettings={updateSettings}
-        onResetProgress={handleResetProgress} // Updated: Changed from onHardReset
-        gameState={gameState} // New: Pass gameState
-        goHome={() => handleBackToMenu()} // New: Pass goHome callback
+        onResetProgress={handleResetProgress}
+        gameState={gameState}
+        goHome={handleBackToMenu}
+        playerName={playerName}
+        setPlayerName={setPlayerName}
+      />
+
+      {/* Leaderboard Modal */}
+      <Leaderboard
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        currentPlayerName={playerName}
       />
     </div>
   );
